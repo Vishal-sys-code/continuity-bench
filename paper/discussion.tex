@@ -1,0 +1,41 @@
+\section{Discussion and Systems Failure Modes}
+\label{sec:discussion}
+
+While our primary finding---that History-Forwarding preserves conversational continuity---is intuitive, the engineering required to deploy it reliably under concurrent load is not. During the development and stress-testing of our evaluation harness ($C=100$ concurrent sessions), we encountered two severe, systems-level failure modes that caused complete continuity collapse in otherwise functional prototypes. We document them here as negative results, as they represent critical vulnerabilities for any production multi-provider gateway.
+
+\subsection{State Corruption via Concurrency Race Conditions}
+
+\paragraph{The Vulnerability.} 
+In early prototype testing at low concurrency ($C=5$), the History-Forwarding proxy achieved near-perfect CPR. However, when subjected to production-scale concurrency ($C=100$), the CPR abruptly collapsed to $\sim$28\%. Analysis of the proxy logs revealed that the fallback provider was returning contextually incorrect responses because the \texttt{messages[]} array it received contained fragments of \textit{other} concurrent conversations. 
+
+\paragraph{The Mechanism.}
+The failure stemmed from a classic race condition in the asynchronous evaluation harness, exacerbated by the stateless HTTP abstraction. To minimize network overhead, our initial harness maintained a shared, global cache of conversation histories, updating it and transmitting it to the proxy upon failover. Under high concurrency, \texttt{asyncio} task interleaving caused parallel requests to mutate the shared history array simultaneously. A failover payload destined for Conversation A would frequently capture the factual anchor established milliseconds earlier by Conversation B.
+
+\paragraph{The Fix.}
+Resolving this required strictly isolating conversation state by enforcing deep-copies of the \texttt{messages[]} array per-conversation at the local thread level before any asynchronous yielding occurred. While this specific instantiation was an artefact of our evaluation harness, the vulnerability extends to any stateful proxy design: a gateway that attempts to cache conversation histories internally to avoid client payload bloat must implement robust, per-session read/write locking. Failure to do so results in silent context bleeding across tenant boundaries during failover events.
+
+\subsection{The Failover Retry Storm (Thundering Herd)}
+
+\paragraph{The Vulnerability.}
+During our evaluation of Google Gemini as a fallback provider, the entire proxy infrastructure suffered cascading \texttt{ConnectionRefusedError} crashes, permanently locking out the fallback provider and dropping CPR to zero.
+
+\paragraph{The Mechanism.}
+This failure mode is a specific manifestation of the classical ``thundering herd'' problem~\cite{bonwick1994thundering}, adapted to the constraints of LLM API rate limits. When the primary provider fails, traffic is instantly routed to the secondary fallback provider. If the fallback provider enforces a strict rate limit (e.g., a free tier allowing 15 Requests Per Minute), the sudden influx of $C=100$ concurrent failovers immediately exhausts the quota. The fallback provider begins returning \texttt{429 Too Many Requests} errors.
+
+In a naive failover architecture employing a fixed-interval retry loop (e.g., waiting exactly 2.0 seconds upon receiving a 429), the system enters a self-sustaining, destructive cycle:
+\begin{enumerate}
+    \item The 100 concurrent threads failover simultaneously.
+    \item The fallback provider accepts a handful of requests and rate-limits the remainder.
+    \item The rate-limited threads sleep for exactly 2.0 seconds.
+    \item The threads wake up simultaneously and hammer the fallback API again.
+\end{enumerate}
+This synchronized cycle repeats indefinitely, generating thousands of requests per minute against the fallback provider. The rate-limit windows are never allowed to recover because the provider is under a continuous, synchronized bombardment. Eventually, the sustained connection attempts exhaust available local sockets, causing proxy-level crashes.
+
+\paragraph{The Fix.}
+Fixed-interval retries are insufficient for multi-provider failover. Systems must implement \textbf{exponential backoff with jitter}~\cite{aws-backoff}. By introducing randomized exponential delays (e.g., $t_{\text{wait}} = \min(30, 2^a + \mathcal{U}(0, 1))$), the concurrent threads desynchronize. The jitter spreads the retry attempts across the time domain, allowing the strict rate-limit windows on the fallback provider to reset. Implementing this backoff strategy in our harness completely stabilized queue wait times and eliminated proxy crashes, enabling the successful $N=750$ evaluation run without a single dropped connection.
+
+\subsection{Implications for Production Systems}
+
+These negative results carry a specific implication for the design of production LLM gateways: reliability layers that abstract away provider errors can introduce systemic vulnerabilities if they do not model the failure dynamics of the fallback endpoints. A retry loop that works perfectly against an elastic, high-throughput primary provider will act as a denial-of-service attack against a rate-limited secondary provider. 
+
+In the Metriqual production system, we bypass the harness-level HTTP constraints evaluated here by implementing the proxy data plane in Rust. The Rust implementation uses a zero-copy memory model to avoid the payload copying overhead that triggered our race conditions, and it enforces strict exponential backoff at the connection pool level. While the Python benchmark harness (\textit{continuity-bench}) was necessary to formally measure and prove the correctness of the History-Forwarding strategy, deploying the strategy at scale requires treating the failover mechanism as a distributed systems problem, not merely an API routing problem.

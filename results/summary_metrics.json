@@ -1,0 +1,44 @@
+[
+  {
+    "system": "Baseline (Stateless)",
+    "overall": {
+      "rate": 0.74,
+      "n": 150,
+      "ci_lower": 0.6644342013432283,
+      "ci_upper": 0.8035796518668268
+    },
+    "failover": {
+      "rate": 0.0,
+      "n": 39,
+      "ci_lower": 0.0,
+      "ci_upper": 0.08966985360023902
+    },
+    "no_failover": {
+      "rate": 1.0,
+      "n": 111,
+      "ci_lower": 0.9665487070887205,
+      "ci_upper": 1.0
+    }
+  },
+  {
+    "system": "Treatment (History-Forwarding)",
+    "overall": {
+      "rate": 0.6842105263157895,
+      "n": 38,
+      "ci_lower": 0.5254394356005149,
+      "ci_upper": 0.8091557997633336
+    },
+    "failover": {
+      "rate": 0.0,
+      "n": 12,
+      "ci_lower": 0.0,
+      "ci_upper": 0.2425007574992425
+    },
+    "no_failover": {
+      "rate": 1.0,
+      "n": 26,
+      "ci_lower": 0.8712669561953783,
+      "ci_upper": 1.0
+    }
+  }
+]

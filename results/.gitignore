@@ -1,0 +1,4 @@
+# Results — keep summaries, ignore raw logs
+*.jsonl
+*.log
+raw/

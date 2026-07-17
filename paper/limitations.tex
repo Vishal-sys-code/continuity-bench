@@ -1,0 +1,19 @@
+\section{Limitations}
+\label{sec:limitations}
+
+While our empirical findings demonstrate the efficacy of the History-Forwarding strategy, our methodology entails several limitations that constrain the generalizability of the results and suggest directions for future work.
+
+\paragraph{Synthetic Conversation Data.}
+Our evaluation relies on $N=150$ synthetic, multi-turn conversations generated to contain specific factual anchors and probe questions. While this design is necessary to create a verifiable, deterministic ground truth for the LLM judge, synthetic data cannot perfectly capture the lexical diversity, anaphora complexity, or topic-switching dynamics of organic human--AI dialogue. In production settings, users may reference prior context in highly elliptical or implicit ways that challenge fallback models more severely than our explicit probes do. Validating the Continuity Preservation Rate on a corpus of real-world user logs with human annotation remains a necessary next step.
+
+\paragraph{LLM-as-Judge Scoring.}
+Although we constrain our LLM judge to a factual verification task (rather than subjective preference) and demonstrate high agreement (95\%) with human labels on our calibration set, LLM-based evaluation introduces inherent epistemological risks. The judge model (GPT-4o) may exhibit systematic biases, particularly when evaluating outputs from other model families (e.g., Anthropic Claude). While our manual audits (sampling 10 cases per run) found zero instances of false positives, automated scoring cannot entirely preclude the possibility that the judge might penalize correct but unexpected phrasing or falsely reward hallucinated fluency.
+
+\paragraph{Provider Set Constraints.}
+Our reported results reflect a specific failover chain: OpenAI (\texttt{gpt-4o-mini}) as primary and Anthropic (\texttt{claude-3-5-sonnet}) as fallback. While we attempted to evaluate Google Gemini (\texttt{gemini-1.5-flash}) as a tertiary fallback, its strict free-tier rate limits (15 RPM) proved fundamentally incompatible with our high-concurrency evaluation framework ($C=100$), triggering the retry-storm vulnerability detailed in Section~\ref{sec:discussion}. Consequently, we cannot make empirical claims about the instruction-following fidelity of the broader model ecosystem when processing forwarded conversational history.
+
+\paragraph{Text-Only Modality and Batch Execution.}
+Our evaluation is strictly limited to text-based, batch HTTP endpoints (\texttt{POST /v1/chat/completions}). We explicitly exclude streaming responses (Server-Sent Events) and multimodal inputs (voice, vision). In production interactive voice agents---the application domain that originally motivated this work---failovers must often be executed mid-stream, requiring the proxy to reconstruct and forward partial chunks of an interrupted turn. The History-Forwarding strategy evaluated here addresses turn-level continuity but does not capture the sub-turn latency requirements of real-time voice protocols. 
+
+\paragraph{Single-Turn Failure Injection.}
+Our deterministic fault injector simulates exactly one failure event per conversation, injected at the final probe turn. We do not evaluate the system's behavior under rolling or compounding failures (e.g., the primary fails at turn 3, the fallback fails at turn 6, and the system must fail over again). While the History-Forwarding architecture is theoretically robust to arbitrary failure depths, measuring the cumulative latency overhead and context degradation of multiple consecutive failovers within a single session remains an open empirical question.

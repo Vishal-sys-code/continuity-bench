@@ -1,0 +1,902 @@
+[
+  {
+    "conversation_id": "conv-001",
+    "failure_turn": 10,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-002",
+    "failure_turn": 6,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-003",
+    "failure_turn": 8,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-004",
+    "failure_turn": 6,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-005",
+    "failure_turn": 6,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-006",
+    "failure_turn": 10,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-007",
+    "failure_turn": 6,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-008",
+    "failure_turn": 8,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-009",
+    "failure_turn": 8,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-010",
+    "failure_turn": 8,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-011",
+    "failure_turn": 8,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-012",
+    "failure_turn": 6,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-013",
+    "failure_turn": 10,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-014",
+    "failure_turn": 10,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-015",
+    "failure_turn": 6,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-016",
+    "failure_turn": 8,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-017",
+    "failure_turn": 6,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-018",
+    "failure_turn": 8,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-019",
+    "failure_turn": 10,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-020",
+    "failure_turn": 10,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-021",
+    "failure_turn": 8,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-022",
+    "failure_turn": 10,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-023",
+    "failure_turn": 6,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-024",
+    "failure_turn": 6,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-025",
+    "failure_turn": 10,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-026",
+    "failure_turn": 6,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-027",
+    "failure_turn": 8,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-028",
+    "failure_turn": 6,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-029",
+    "failure_turn": 8,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-030",
+    "failure_turn": 10,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-031",
+    "failure_turn": 10,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-032",
+    "failure_turn": 10,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-033",
+    "failure_turn": 8,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-034",
+    "failure_turn": 10,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-035",
+    "failure_turn": 8,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-036",
+    "failure_turn": 8,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-037",
+    "failure_turn": 10,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-038",
+    "failure_turn": 8,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-039",
+    "failure_turn": 6,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-040",
+    "failure_turn": 6,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-041",
+    "failure_turn": 8,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-042",
+    "failure_turn": 10,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-043",
+    "failure_turn": 10,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-044",
+    "failure_turn": 8,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-045",
+    "failure_turn": 10,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-046",
+    "failure_turn": 6,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-047",
+    "failure_turn": 10,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-048",
+    "failure_turn": 10,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-049",
+    "failure_turn": 10,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-050",
+    "failure_turn": 8,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-051",
+    "failure_turn": 8,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-052",
+    "failure_turn": 6,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-053",
+    "failure_turn": 8,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-054",
+    "failure_turn": 8,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-055",
+    "failure_turn": 10,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-056",
+    "failure_turn": 10,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-057",
+    "failure_turn": 10,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-058",
+    "failure_turn": 6,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-059",
+    "failure_turn": 6,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-060",
+    "failure_turn": 6,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-061",
+    "failure_turn": 8,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-062",
+    "failure_turn": 10,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-063",
+    "failure_turn": 8,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-064",
+    "failure_turn": 8,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-065",
+    "failure_turn": 6,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-066",
+    "failure_turn": 8,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-067",
+    "failure_turn": 10,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-068",
+    "failure_turn": 10,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-069",
+    "failure_turn": 8,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-070",
+    "failure_turn": 6,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-071",
+    "failure_turn": 6,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-072",
+    "failure_turn": 6,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-073",
+    "failure_turn": 8,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-074",
+    "failure_turn": 8,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-075",
+    "failure_turn": 8,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-076",
+    "failure_turn": 6,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-077",
+    "failure_turn": 8,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-078",
+    "failure_turn": 6,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-079",
+    "failure_turn": 6,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-080",
+    "failure_turn": 8,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-081",
+    "failure_turn": 8,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-082",
+    "failure_turn": 8,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-083",
+    "failure_turn": 8,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-084",
+    "failure_turn": 10,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-085",
+    "failure_turn": 10,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-086",
+    "failure_turn": 10,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-087",
+    "failure_turn": 10,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-088",
+    "failure_turn": 8,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-089",
+    "failure_turn": 8,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-090",
+    "failure_turn": 10,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-091",
+    "failure_turn": 8,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-092",
+    "failure_turn": 6,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-093",
+    "failure_turn": 6,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-094",
+    "failure_turn": 6,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-095",
+    "failure_turn": 8,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-096",
+    "failure_turn": 10,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-097",
+    "failure_turn": 8,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-098",
+    "failure_turn": 10,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-099",
+    "failure_turn": 6,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-100",
+    "failure_turn": 6,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-101",
+    "failure_turn": 8,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-102",
+    "failure_turn": 8,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-103",
+    "failure_turn": 10,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-104",
+    "failure_turn": 6,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-105",
+    "failure_turn": 6,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-106",
+    "failure_turn": 8,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-107",
+    "failure_turn": 8,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-108",
+    "failure_turn": 8,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-109",
+    "failure_turn": 8,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-110",
+    "failure_turn": 10,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-111",
+    "failure_turn": 10,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-112",
+    "failure_turn": 8,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-113",
+    "failure_turn": 10,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-114",
+    "failure_turn": 8,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-115",
+    "failure_turn": 8,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-116",
+    "failure_turn": 6,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-117",
+    "failure_turn": 10,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-118",
+    "failure_turn": 8,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-119",
+    "failure_turn": 10,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-120",
+    "failure_turn": 8,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-121",
+    "failure_turn": 10,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-122",
+    "failure_turn": 8,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-123",
+    "failure_turn": 6,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-124",
+    "failure_turn": 6,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-125",
+    "failure_turn": 10,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-126",
+    "failure_turn": 6,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-127",
+    "failure_turn": 8,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-128",
+    "failure_turn": 6,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-129",
+    "failure_turn": 6,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-130",
+    "failure_turn": 10,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-131",
+    "failure_turn": 10,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-132",
+    "failure_turn": 6,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-133",
+    "failure_turn": 8,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-134",
+    "failure_turn": 6,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-135",
+    "failure_turn": 10,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-136",
+    "failure_turn": 6,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-137",
+    "failure_turn": 8,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-138",
+    "failure_turn": 10,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-139",
+    "failure_turn": 8,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-140",
+    "failure_turn": 10,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-141",
+    "failure_turn": 10,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-142",
+    "failure_turn": 8,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-143",
+    "failure_turn": 6,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-144",
+    "failure_turn": 6,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-145",
+    "failure_turn": 8,
+    "mode": "rate_limit",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-146",
+    "failure_turn": 8,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-147",
+    "failure_turn": 8,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-148",
+    "failure_turn": 10,
+    "mode": "timeout",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-149",
+    "failure_turn": 6,
+    "mode": "api_error",
+    "fallback_provider": null
+  },
+  {
+    "conversation_id": "conv-150",
+    "failure_turn": 10,
+    "mode": "timeout",
+    "fallback_provider": null
+  }
+]

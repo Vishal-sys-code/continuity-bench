@@ -1,0 +1,114 @@
+\section{Evaluation Methodology}
+\label{sec:experimental}
+
+This section describes the construction of our evaluation pipeline in detail sufficient for full reproduction. The complete harness, test suite, and scoring infrastructure are released as open-source software at the tagged commit \texttt{v1.0-phase2-final}.
+
+\subsection{Test Suite Construction}
+
+We construct a synthetic test suite of $N=150$ multi-turn conversations, each designed to embed a verifiable factual anchor in an early turn and probe for its recall in a later turn, with a provider failover injected between the two.
+
+\paragraph{Conversation structure.}
+Each conversation consists of 7--11 turns (mean $= 9.1$) of alternating user and assistant messages. The first user message (turn 0) establishes a distinctive factual anchor---a specific claim, preference, name, date, or invented term. Subsequent turns contain topically unrelated filler dialogue (general knowledge questions and their answers) that serves two purposes: (1) it increases the distance between the fact establishment and the probe, testing whether the system preserves context across extended dialogue, and (2) it creates a realistic multi-turn conversation pattern where not every message references prior context. The final user message is a \textit{probe}: a direct question that can only be answered correctly if the model has access to the factual anchor from turn 0.
+
+\paragraph{Example.}
+\begin{quote}
+\small
+\textbf{Turn 0 (User):} ``I prefer Thai over all other cuisines.'' \\
+\textbf{Turn 1 (Asst):} ``Sure thing, I've made a note of it.'' \\
+\textbf{Turns 2--9:} \textit{[Unrelated dialogue about magnets, 3D printers, public speaking, Montessori education]} \\
+\textbf{Turn 10 (User, Probe):} ``Which cuisine did I say I prefer?'' \\
+\textbf{Expected Fact:} ``Thai''
+\end{quote}
+
+\paragraph{Fact type distribution.}
+To avoid biasing the evaluation toward any single category of recall, we distribute the 150 conversations evenly across five fact types, with 30 conversations per category:
+
+\begin{center}
+\small
+\begin{tabular}{lll}
+\toprule
+\textbf{Fact Type} & \textbf{Count} & \textbf{Example Anchor} \\
+\midrule
+Preference & 30 & ``I only read Gothic horror'' \\
+Invented term & 30 & ``The protocol is codenamed Plexarine'' \\
+Proper name & 30 & ``The keynote speaker is Yuna Kowalski'' \\
+Numeric value & 30 & ``The passcode is 42-8901'' \\
+Date & 30 & ``The warranty expires January 21, 1966'' \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Probe turn distribution.}
+The probe (final user message) occurs at turn index 6, 8, or 10, distributed as 44, 58, and 48 conversations respectively. This variation ensures that the evaluation is not confounded by a fixed conversation length. Longer conversations produce larger \texttt{messages[]} payloads, exercising the system's ability to forward substantial context volumes.
+
+\subsection{Deterministic Fault Injection}
+
+To enable controlled, reproducible experimentation, we implement a deterministic fault injection layer rather than relying on stochastic or real-world provider failures.
+
+\paragraph{Experiment manifest.}
+A fixed experiment manifest (\texttt{experiment\_manifest.json}) assigns each of the 150 conversations a specific failure turn and a specific fallback provider, generated deterministically from a seed ($s = 42$). The manifest specifies triples $(\texttt{conversation\_id}, \texttt{failure\_turn}, \texttt{fallback\_provider})$. Both the baseline and treatment proxies consume the same manifest, ensuring that every conversation experiences an identical failure event at an identical turn, with failover routed to an identical fallback provider. This eliminates confounding from stochastic failure timing or asymmetric provider assignment.
+
+\paragraph{Failure modes.}
+The fault injector simulates three classes of provider failure: \texttt{TIMEOUT} (simulated provider timeout), \texttt{API\_ERROR} (simulated 5xx server error), and \texttt{RATE\_LIMIT} (simulated 429 response). The failure mode is assigned per-conversation from the manifest. In all cases, the failure prevents the primary provider from returning a response for the designated turn, forcing the proxy to execute its failover logic.
+
+\paragraph{Failure timing.}
+Failures are injected at the probe turn itself (the final user message), representing the most demanding evaluation condition: the failover occurs precisely when the user asks the context-dependent question, and the fallback provider must answer it from whatever context it receives. This ``late'' injection strategy ensures that all preceding turns have been processed by the primary provider and that the full conversation history is available for forwarding.
+
+\subsection{LLM-as-Judge Scoring}
+
+Each probe response is scored by an automated LLM judge to determine whether the factual anchor was successfully preserved across the failover boundary.
+
+\paragraph{Judge architecture.}
+We use GPT-4o~\cite{openai2024gpt4o} as the judge model, invoked via structured output parsing (\texttt{response\_format=JudgeScore}) to produce a binary \texttt{preserved} $\in \{\texttt{true}, \texttt{false}\}$ decision and a free-text \texttt{reasoning} field. The judge receives three inputs: the \textit{expected fact} (ground truth), the \textit{probe question}, and the \textit{actual response} from the proxy. It does \textit{not} receive the full conversation history, preventing information leakage that could inflate scores.
+
+\paragraph{Judge prompt.}
+The system prompt instructs the judge to return \texttt{preserved=true} if the response correctly incorporates the expected fact, even if paraphrased or reformatted, and \texttt{preserved=false} if the response apologises, claims ignorance, hallucinates a different fact, or omits critical details. The full prompt is provided in Appendix~\ref{app:judge_prompt}.
+
+\paragraph{Fast-path heuristic.}
+Before invoking the LLM judge, the harness applies a deterministic substring check: if the expected fact appears verbatim (case-insensitive) in the response, the response is immediately scored as \texttt{preserved=true} without an API call. This heuristic reduces judge API costs and latency without sacrificing accuracy, as exact substring matches are unambiguous. Responses containing error markers (\texttt{[ERROR]}, \texttt{[HTTP ERROR]}) are immediately scored as \texttt{preserved=false}.
+
+\paragraph{Calibration.}
+Prior to deployment on the full evaluation set, we calibrate the judge against a hand-labeled set of 20 examples covering the principal edge cases: exact matches, acceptable paraphrases, hallucinated substitutions, refusals, formatting variations, and proxy error responses. The judge achieves a \textbf{95\% agreement rate} (19/20) with the hand-labeled ground truth on this calibration set. The single disagreement involved a partial date recall (``June 2029'' versus the expected ``June 14, 2029''), which the judge correctly rejected as missing the specific day---a conservative decision we consider appropriate for a factual verification task. We require $\geq 90\%$ calibration agreement before proceeding to full evaluation; the judge passed this threshold on the first attempt.
+
+\subsection{Manual Audits}
+
+In addition to automated scoring, we perform manual audits at multiple stages of the evaluation pipeline. We consider this a critical methodological safeguard: automated judges can exhibit systematic biases or failure modes that are invisible to aggregate metrics.
+
+\paragraph{Phase 1 audit.}
+During initial system development, we manually inspected 15 treatment-group failover responses to verify that the History-Forwarding mechanism was correctly injecting the full \texttt{messages[]} array and that the fallback provider's responses were genuinely informed by prior context rather than coincidentally correct.
+
+\paragraph{Phase 2 iterative audits.}
+During the high-concurrency stress testing campaign (Section~\ref{sec:stress}), we performed manual audits after each significant infrastructure change---including the retry-storm fix and the provider fallback chain reconfiguration---to verify that code changes did not introduce regressions in the forwarding mechanism.
+
+\paragraph{Final audit.}
+On the definitive 5-run batch that produced the results reported in Section~\ref{sec:results}, we randomly sampled 10 treatment-group failover responses from the final run (Run 5) and manually verified each against the original conversation. For each sampled case, we confirmed: (1) the probe question required context from the fact-establishment turn, (2) the response from the fallback provider (Anthropic Claude) correctly recalled the specific factual anchor, and (3) the judge's \texttt{preserved=true} ruling was appropriate. All 10 sampled cases passed manual verification. The audit script and its output are committed to the repository at \texttt{scripts/audit\_phase2.py} and \texttt{results/phase2\_audit\_output.txt}.
+
+\subsection{Multi-Provider Configuration}
+
+\paragraph{Primary provider.}
+All conversations are initiated against OpenAI (\texttt{gpt-4o-mini}) as the primary provider. This model processes the non-failover turns of every conversation.
+
+\paragraph{Fallback providers.}
+On failover, the proxy routes to a fallback provider specified by the experiment manifest. Our final evaluation uses Anthropic (\texttt{claude-3-5-sonnet}) as the sole fallback. During development, we additionally tested Google Gemini (\texttt{gemini-1.5-flash}) as a tertiary fallback; however, the free-tier rate limit of 15 requests per minute proved incompatible with high-concurrency evaluation at $C=100$, triggering the retry-storm failure mode described in Section~\ref{sec:discussion}. We report results exclusively from the OpenAI $\rightarrow$ Anthropic failover chain.
+
+\paragraph{Cross-provider heterogeneity.}
+The use of different model families (GPT-4o-mini and Claude 3.5 Sonnet) for the primary and fallback providers is a deliberate experimental design choice. It ensures that the evaluation measures genuine context transfer rather than model-specific memorisation or prompt formatting artefacts. If the fallback model can correctly answer the probe, it must have received and processed the forwarded conversation history, because it has no other source of information about the user's earlier statements.
+
+\subsection{High-Concurrency Stress Testing}
+\label{sec:stress}
+
+\paragraph{Concurrency level.}
+All reported results are obtained at a concurrency level of $C = 100$ simultaneous conversations, managed by an \texttt{asyncio.Semaphore} in the evaluation harness. This level was chosen to approximate realistic production load patterns and to stress-test the proxy infrastructure under conditions where race conditions, resource contention, and provider rate limits are likely to manifest.
+
+\paragraph{Retry logic.}
+The evaluation harness implements exponential backoff with jitter for transient failures (HTTP 429, 502, 503, 504):
+\[
+    t_{\text{wait}} = \min\!\big(30\text{s},\; 2^{a} + \mathcal{U}(0, 1)\big)
+\]
+where $a$ is the attempt index (0-indexed) and $\mathcal{U}(0,1)$ is a uniform random variate providing jitter. This backoff policy was adopted after discovering the retry-storm vulnerability (Section~\ref{sec:discussion}) during early stress testing with a naive fixed-interval retry.
+
+\paragraph{Replication.}
+We execute 5 independent runs of the full 150-conversation evaluation, yielding a total of $N = 750$ failover events per system (baseline and treatment). Each run clears the log files and re-executes the complete traffic $\rightarrow$ judge $\rightarrow$ metrics pipeline from scratch against the same standing proxy instances. A 5-second cooling period separates consecutive runs to allow provider rate-limit windows to partially reset.
+
+\paragraph{Aggregate statistics.}
+Final CPR and CLO are computed by pooling all 750 events across the 5 runs and computing the Wilson score confidence interval over the pooled counts, rather than averaging the per-run point estimates. This pooling strategy yields a tighter confidence interval that accurately reflects the total sample size.

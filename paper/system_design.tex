@@ -1,0 +1,155 @@
+\section{System Design}
+\label{sec:method}
+
+This section formalizes our evaluation metrics, describes the architecture of the continuity-preserving proxy, and precisely delineates the two systems under comparison.
+
+\subsection{Metrics}
+
+We introduce two metrics to quantify conversational continuity during multi-provider failover.
+
+\begin{definition}[Continuity Preservation Rate (CPR)]
+Let $\mathcal{F} = \{f_1, f_2, \ldots, f_N\}$ denote the set of failover events in an evaluation run. For each event $f_i$, let $\mathsf{preserved}(f_i) \in \{0, 1\}$ indicate whether the fallback provider's response demonstrates access to a factual anchor established in the pre-failover conversation history, as determined by an automated LLM judge (Section~\ref{sec:experimental}). The Continuity Preservation Rate is:
+\[
+    \mathrm{CPR} = \frac{1}{N} \sum_{i=1}^{N} \mathsf{preserved}(f_i)
+\]
+We report CPR with a 95\% Wilson score confidence interval~\cite{wilson1927}, which provides reliable coverage even at extreme success rates near 0 or 1.
+\end{definition}
+
+\begin{definition}[Continuity Latency Overhead (CLO)]
+For each failover event $f_i$, let $\ell_i^{\mathrm{treat}}$ and $\ell_i^{\mathrm{base}}$ denote the end-to-end latency of the treatment (history-forwarding) and baseline (stateless) systems, respectively. The Continuity Latency Overhead is:
+\[
+    \mathrm{CLO} = \frac{1}{N} \sum_{i=1}^{N} \left(\ell_i^{\mathrm{treat}} - \ell_i^{\mathrm{base}}\right)
+\]
+CLO quantifies the additional time cost of reconstructing conversational state during failover. We report both mean and P95 CLO to characterize the latency distribution, including tail behavior attributable to large conversation payloads.
+\end{definition}
+
+\subsection{Architecture}
+
+Figure~\ref{fig:architecture} illustrates the high-level architecture of the continuity-preserving proxy system. The design consists of four principal components: a request interceptor, a conversation state store, a fault injection layer, and a failover controller. We describe each in turn.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+    node distance=1.2cm and 2.0cm,
+    box/.style={draw, rounded corners=3pt, minimum width=2.8cm, minimum height=0.9cm, font=\footnotesize\sffamily, align=center, thick},
+    provider/.style={draw, rounded corners=3pt, minimum width=2.4cm, minimum height=0.8cm, font=\footnotesize\sffamily, align=center, thick},
+    store/.style={draw, cylinder, shape border rotate=90, aspect=0.15, minimum width=2.2cm, minimum height=0.9cm, font=\footnotesize\sffamily, align=center, thick, fill=gray!8},
+    proxybox/.style={draw, rounded corners=6pt, thick, dashed, fill=blue!3},
+    arrow/.style={-{Stealth[length=2mm]}, thick},
+    xmark/.style={font=\bfseries\large, red},
+]
+    % Client
+    \node[box, fill=gray!12] (client) {Client\\Application};
+
+    % Proxy boundary
+    \node[proxybox, right=2.2cm of client, minimum width=4.2cm, minimum height=5.0cm] (proxy) {};
+    \node[font=\footnotesize\sffamily\bfseries, anchor=north] at ([yshift=-0.15cm]proxy.north) {Continuity Proxy};
+
+    % Internal components
+    \node[box, fill=blue!8] (interceptor) at ([yshift=0.9cm]proxy.center) {Request\\Interceptor};
+    \node[store] (store) at (proxy.center) {State Store};
+    \node[box, fill=orange!10] (failover) at ([yshift=-0.9cm]proxy.center) {Failover\\Controller};
+
+    % Providers
+    \node[provider, fill=green!12, right=2.2cm of interceptor] (primary) {Provider A\\(Primary)};
+    \node[provider, fill=blue!10, right=2.2cm of store] (fallback1) {Provider B\\(Fallback 1)};
+    \node[provider, fill=orange!10, right=2.2cm of failover] (fallback2) {Provider C\\(Fallback 2)};
+
+    % Arrows
+    \draw[arrow] (client) -- node[above, font=\scriptsize\sffamily] {\texttt{messages[]}} (interceptor);
+    \draw[arrow, <->] (interceptor) -- node[right, font=\scriptsize\sffamily] {r/w} (store);
+    \draw[arrow, <->] (store) -- node[right, font=\scriptsize\sffamily] {} (failover);
+    \draw[arrow] (interceptor) -- node[above, font=\scriptsize\sffamily, pos=0.4] {normal} (primary);
+    \draw[arrow, densely dashed, blue!70!black] (failover) -- node[below, font=\scriptsize\sffamily, pos=0.4] {full history} (fallback1);
+    \draw[arrow, densely dashed, blue!70!black] (failover) -- node[below, font=\scriptsize\sffamily, pos=0.4] {} (fallback2);
+
+    % Failure X
+    \node[xmark] at ([xshift=0.7cm]interceptor.east) {\texttimes};
+\end{tikzpicture}
+\caption{Architecture of the continuity-preserving proxy. Incoming \texttt{messages[]} are intercepted and persisted in the conversation state store. On primary provider failure (\textcolor{red}{\texttimes}), the failover controller reconstructs the full conversation history and forwards it to the next available fallback provider.}
+\label{fig:architecture}
+\end{figure}
+
+\paragraph{Request Interceptor.}
+Every incoming chat completion request passes through the request interceptor, which operates as an OpenAI-compatible HTTP endpoint (\texttt{POST /v1/chat/completions}). The interceptor extracts the \texttt{conversation\_id} and \texttt{messages[]} array from the request payload. On each invocation, the current \texttt{messages[]} array---which under the OpenAI chat completion convention contains the \textit{full} conversation history up to the current turn---is made available to downstream components.
+
+\paragraph{Conversation State Store.}
+The state store maintains a per-conversation record of the full \texttt{messages[]} array. In our evaluation harness, state is maintained in-process via a Python dictionary keyed by \texttt{conversation\_id}. In the production Metriqual deployment (discussed in Section~\ref{sec:discussion}), this component is replaced by a Rust-native in-memory store with sub-5ms read/write latency; we note this distinction explicitly to avoid conflating benchmark harness performance with production system performance.
+
+\paragraph{Fault Injection Layer.}
+To enable controlled, reproducible experimentation, we implement a deterministic fault injector that simulates provider failures at specified conversation turns. Given a seed $s$ and an experiment manifest $\mathcal{M}$ specifying $\{(\texttt{conversation\_id}_j, \texttt{failure\_turn}_j)\}$ pairs, the injector raises one of three failure modes at the designated turn: \texttt{TIMEOUT} (simulated provider timeout), \texttt{API\_ERROR} (simulated 5xx response), or \texttt{RATE\_LIMIT} (simulated 429 response). The deterministic schedule ensures that baseline and treatment systems experience identical failure conditions, eliminating confounding from stochastic failure timing.
+
+\paragraph{Failover Controller.}
+Upon intercepting a failure event---whether injected or genuine---the failover controller executes the provider failover. The controller iterates through a configurable fallback chain (specified in \texttt{providers.yaml}) until a successful response is obtained. The critical design variable is what \texttt{messages[]} payload is forwarded to the fallback provider. This single decision point is the sole difference between the two systems under comparison.
+
+\subsection{Systems Under Comparison}
+
+We evaluate two systems that share identical infrastructure---the same request interceptor, fault injector, provider abstraction layer, and logging pipeline---and differ in exactly one line of code: the construction of the \texttt{messages[]} array forwarded to the fallback provider during a failover event.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+    node distance=0.6cm,
+    msgbox/.style={draw, rounded corners=2pt, font=\scriptsize\ttfamily, minimum width=2.8cm, minimum height=0.5cm, align=center, thick},
+    label/.style={font=\small\sffamily\bfseries},
+    arrow/.style={-{Stealth[length=2mm]}, thick},
+    note/.style={font=\scriptsize\sffamily, align=center},
+]
+    % Baseline side
+    \node[label] (baselabel) {(a) Baseline: Stateless};
+    \node[msgbox, fill=gray!15, below=0.4cm of baselabel] (b_full) {$[m_1, m_2, \ldots, m_n]$};
+    \node[note, below=0.1cm of b_full] (b_note1) {Client sends full history};
+    \node[msgbox, fill=red!15, below=0.6cm of b_note1] (b_strip) {$[m_n]$};
+    \node[note, below=0.1cm of b_strip] (b_note2) {Proxy strips to last msg};
+    \node[msgbox, fill=red!8, below=0.6cm of b_note2] (b_fallback) {\textit{``I don't have context''}};
+    \node[note, below=0.1cm of b_fallback] (b_note3) {\textcolor{red}{\ding{55}} Context lost};
+
+    \draw[arrow] (b_full) -- (b_strip);
+    \draw[arrow, red!70!black, densely dashed] (b_strip) -- (b_fallback);
+
+    % Treatment side
+    \node[label, right=3.5cm of baselabel] (treatlabel) {(b) Treatment: History-Forwarding};
+    \node[msgbox, fill=gray!15, below=0.4cm of treatlabel] (t_full) {$[m_1, m_2, \ldots, m_n]$};
+    \node[note, below=0.1cm of t_full] (t_note1) {Client sends full history};
+    \node[msgbox, fill=green!15, below=0.6cm of t_note1] (t_fwd) {$[m_1, m_2, \ldots, m_n]$};
+    \node[note, below=0.1cm of t_fwd] (t_note2) {Proxy forwards full history};
+    \node[msgbox, fill=green!8, below=0.6cm of t_note2] (t_fallback) {\textit{``You said Plexarine''}};
+    \node[note, below=0.1cm of t_fallback] (t_note3) {\textcolor{green!60!black}{\ding{51}} Context preserved};
+
+    \draw[arrow] (t_full) -- (t_fwd);
+    \draw[arrow, green!60!black, densely dashed] (t_fwd) -- (t_fallback);
+\end{tikzpicture}
+\caption{The sole architectural difference between the two evaluated systems. (a)~The \textbf{baseline} proxy extracts only the latest user message $m_n$ and forwards it to the fallback provider, discarding all prior context. (b)~The \textbf{treatment} proxy forwards the complete \texttt{messages[]} array $[m_1, m_2, \ldots, m_n]$, enabling the fallback provider to answer context-dependent probes.}
+\label{fig:baseline_vs_treatment}
+\end{figure}
+
+\paragraph{Baseline: Stateless Failover.}
+The baseline system represents the industry-standard failover strategy employed by existing multi-provider gateways. When a failure is detected, the proxy extracts only the most recent user message from the incoming \texttt{messages[]} array and constructs a single-element payload:
+
+\begin{lstlisting}[language=Python, basicstyle=\small\ttfamily, frame=single, numbers=none]
+# Baseline: discard history
+last_msg = extract_last_user_message(messages)
+failover_payload = [{"role": "user", "content": last_msg}]
+\end{lstlisting}
+
+The fallback provider receives this decontextualized message and must respond without access to any prior conversational turns. If the user's message references information established earlier in the dialogue (e.g., ``\textit{What was the name I gave the protocol?}''), the fallback provider has no means of answering correctly. This system achieves full availability---a response is always returned---but sacrifices continuity.
+
+\paragraph{Treatment: History-Forwarding.}
+The treatment system implements the History-Forwarding strategy. On failover, the proxy forwards the \texttt{messages[]} array in its entirety:
+
+\begin{lstlisting}[language=Python, basicstyle=\small\ttfamily, frame=single, numbers=none]
+# Treatment: forward full history
+failover_payload = list(messages)  # complete conversation
+\end{lstlisting}
+
+The fallback provider receives the full conversational context and can answer context-dependent probes as if the provider switch had not occurred. The treatment system achieves both availability and continuity, at the cost of transmitting a larger payload (proportional to conversation length) to the fallback provider.
+
+Figure~\ref{fig:baseline_vs_treatment} illustrates this distinction. The two systems are otherwise identical: they share the same provider abstraction layer (\texttt{systems/providers.py}), the same fault injection schedule, the same logging infrastructure, and the same evaluation harness. This controlled design ensures that any measured difference in CPR is attributable solely to the failover payload strategy.
+
+\subsection{Provider Abstraction}
+
+Both systems interact with LLM providers through a unified \texttt{Provider} interface that normalizes the heterogeneous API surfaces of OpenAI and Anthropic into a common \texttt{chat(messages, model, temperature, max\_tokens)} signature. The Anthropic adapter handles the necessary format translation---extracting system prompts from the \texttt{messages[]} array and mapping roles to the Anthropic API schema---transparently to the proxy layer. This abstraction ensures that the failover mechanism is provider-agnostic: the same \texttt{messages[]} payload can be forwarded to any supported backend without modification.
+
+\subsection{A Note on Production Performance}
+
+It is important to distinguish between two separate claims. The \textit{correctness} claim---that History-Forwarding preserves conversational continuity at 99.20\% CPR---is established by our benchmark evaluation, which is implemented as a Python evaluation harness with \texttt{asyncio}-based concurrency and \texttt{ThreadingHTTPServer} proxies. The \textit{performance} claim---that stateful failover can be achieved with sub-5ms proxy overhead in production---pertains to the Metriqual data plane, which is implemented in Rust with zero-copy message forwarding and an in-memory conversation store. We do not conflate these claims. The benchmark harness measures the mechanism's correctness and the latency characteristics of the underlying LLM providers; the production system's data plane performance is a separate engineering contribution not evaluated in this paper. The Python harness introduces its own scheduling and I/O overhead that is not representative of production proxy latency, and we report end-to-end latencies (including provider response time) rather than proxy-internal overhead to avoid misrepresentation.

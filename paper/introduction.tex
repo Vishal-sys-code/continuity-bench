@@ -1,0 +1,32 @@
+\section{Introduction}
+\label{sec:introduction}
+
+A voice agent does not crash during a provider failover. It forgets.
+
+Consider the following failure scenario, observed during a routine debugging session that ultimately motivated this work. A primary LLM provider experiences a transient outage lasting eleven seconds. The retry logic performs exactly as designed: the request is rerouted to a secondary provider, which returns a well-formed response. Every health check reports green. The HTTP status code reads 200. By every operational metric in common use, the system has behaved correctly. Yet the user is forced to repeat themselves from the beginning, because the failover model received none of the preceding conversational context. The dashboard says the system is healthy. The user knows otherwise.
+
+This failure mode is pervasive, consequential, and almost entirely unmeasured. The machine learning community has developed rigorous benchmarks for accuracy~\cite{mmlu}, latency~\cite{anyscale-benchmark}, and hallucination rate~\cite{halueval}. No comparable methodology exists for evaluating whether a multi-provider system preserves conversational continuity when a failover event occurs. The implicit industry assumption---that a successful HTTP response entails a successful conversation---conflates two fundamentally distinct properties: \textit{availability} (the system returned an answer) and \textit{continuity} (the system returned an answer informed by the full preceding context). In interactive voice applications, the loss of continuity manifests as an abrupt conversational reset, functionally equivalent to a hang-up. In agentic pipelines executing multi-step tasks, the consequences are more insidious: the agent continues operating on a truncated context window, producing plausible but incorrect outputs whose root cause---the silent loss of state at the failover boundary---may not surface until several reasoning steps later, well after the actual damage has been done.
+
+\subsection{The Gap in Existing Infrastructure}
+
+A growing ecosystem of multi-provider LLM gateways has emerged to address the operational challenges of deploying across heterogeneous model endpoints. Systems such as LiteLLM~\cite{litellm}, Portkey~\cite{portkey}, and OpenRouter~\cite{openrouter} provide unified API interfaces, automatic failover routing, load balancing, and cost optimization across providers including OpenAI, Anthropic, Google, and others. These systems have made substantial contributions to operational reliability, and we build upon several of their architectural patterns in this work.
+
+However, existing gateways operate at the \textit{request} level: each API call is treated as an independent, stateless transaction. When a failover is triggered, the gateway routes the current request to an alternative provider, but the conversational history that preceded it---maintained only by the now-unavailable primary---is not reconstructed. The failover model receives a single decontextualized message rather than the full dialogue. This is not an implementation oversight; it reflects a fundamental architectural choice. These systems were designed to ensure that \textit{a response is returned}, not that \textit{the conversation survives}. The distinction has not been formally characterized, and to our knowledge, no existing benchmark evaluates it.
+
+\subsection{Contributions}
+
+This paper makes the following contributions:
+
+\begin{enumerate}
+    \item \textbf{Formalizing conversational continuity as a measurable property.} We identify and define the \textit{continuity gap}: the silent loss of conversational state during multi-provider failover events. We argue that continuity is orthogonal to availability and requires independent evaluation.
+
+    \item \textbf{Proposing two evaluation metrics.} We introduce the \textit{Continuity Preservation Rate} (CPR), which measures the fraction of failover events in which the fallback model's response demonstrates access to the full preceding context, and the \textit{Continuity Latency Overhead} (CLO), which quantifies the additional latency cost of state reconstruction during failover.
+
+    \item \textbf{Building and evaluating a stateful failover system.} We design a multi-provider proxy architecture employing a \textit{History-Forwarding} strategy that reconstructs the complete conversational state at the fallback provider. Across $N=750$ failover events evaluated by an LLM judge, our system achieves a CPR of 99.20\% [95\% Wilson CI: 98.27\%, 99.63\%], compared to a near-0\% baseline under identical conditions.
+
+    \item \textbf{Releasing a reproducible benchmark harness.} We open-source \textit{continuity-bench}, a fully automated evaluation harness that generates multi-turn conversations with embedded factual anchors, orchestrates controlled failover injection at configurable turn indices, and scores context preservation via automated LLM judging---enabling reproducible evaluation of any multi-provider system.
+
+    \item \textbf{Characterizing two systems-level failure modes.} During high-concurrency stress testing ($C=100$ concurrent conversations), we discover and document two failure modes absent from the existing literature: (a) a \textit{concurrency race condition} in which parallel failover events corrupt shared proxy state, and (b) a \textit{retry-storm vulnerability} in which naive fixed-interval retry logic against rate-limited fallback providers generates a self-sustaining request storm, permanently locking out the fallback endpoint and cascading into full system failure. We demonstrate that exponential backoff with jitter is necessary and sufficient to resolve the latter.
+\end{enumerate}
+
+The remainder of this paper is organized as follows. Section~\ref{sec:related} surveys related work in multi-provider orchestration and LLM evaluation. Section~\ref{sec:method} formalizes our metrics and describes the system architecture. Section~\ref{sec:experimental} details the experimental setup, including the benchmark harness and test suite construction. Section~\ref{sec:results} presents our empirical results. Section~\ref{sec:discussion} discusses the retry-storm finding and its implications for production deployments. Section~\ref{sec:conclusion} concludes.

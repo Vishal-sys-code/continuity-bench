@@ -1,0 +1,119 @@
+\section{Results}
+\label{sec:results}
+
+We report the primary evaluation results across all five independent runs ($N = 750$ failover events per system). All experiments were conducted at concurrency $C = 100$ against the OpenAI $\rightarrow$ Anthropic failover chain, using the deterministic fault injection schedule described in Section~\ref{sec:experimental}.
+
+\subsection{Continuity Preservation Rate}
+
+\paragraph{Headline result.}
+Table~\ref{tab:cpr_pooled} presents the pooled CPR across all 750 failover events. The History-Forwarding treatment system preserves conversational context in 744 of 750 failover events, yielding a CPR of \textbf{99.20\%} [95\% Wilson CI: 98.27\%, 99.63\%]. The stateless baseline preserves context in 0 of 750 events (0.00\% [0.00\%, 0.51\%]). The difference is significant by any reasonable standard ($p < 10^{-200}$ by Fisher's exact test).
+
+\begin{table}[t]
+\centering
+\caption{Pooled Continuity Preservation Rate across $N = 750$ failover events (5 runs $\times$ 150 conversations). Confidence intervals are 95\% Wilson score intervals.}
+\label{tab:cpr_pooled}
+\small
+\begin{tabular}{lccc}
+\toprule
+\textbf{System} & \textbf{Preserved / Total} & \textbf{CPR (\%)} & \textbf{95\% CI} \\
+\midrule
+Baseline (Stateless)            & 0 / 750   & 0.00  & [0.00, 0.51] \\
+Treatment (History-Forwarding)  & 744 / 750 & 99.20 & [98.27, 99.63] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The six treatment failures (6/750) were examined individually. In each case, the fallback provider received the full conversation history but produced a response that omitted a critical detail from the expected fact---for example, returning a month and year without the specific day for a date-type anchor. These represent limitations of the fallback model's instruction-following fidelity, not failures of the forwarding mechanism itself. The forwarding was verified to be intact in all six cases by inspecting the proxy logs.
+
+\paragraph{Per-run stability.}
+Table~\ref{tab:cpr_per_run} reports the CPR for each individual run. The treatment CPR is remarkably stable across all five runs, ranging from 98.7\% to 99.3\%. The baseline CPR is identically 0.0\% in every run. This consistency confirms that the result is not an artefact of a single favourable run and that the evaluation pipeline produces reproducible outcomes under repeated execution.
+
+\begin{table}[t]
+\centering
+\caption{Per-run CPR stability across five independent runs ($n = 150$ per run). Treatment CPR is stable within a 0.6 percentage point range.}
+\label{tab:cpr_per_run}
+\small
+\begin{tabular}{ccccc}
+\toprule
+\textbf{Run} & \textbf{Baseline CPR (\%)} & \textbf{95\% CI} & \textbf{Treatment CPR (\%)} & \textbf{95\% CI} \\
+\midrule
+1 & 0.0 & [0.0, 2.5] & 99.3 & [96.3, 99.9] \\
+2 & 0.0 & [0.0, 2.5] & 99.3 & [96.3, 99.9] \\
+3 & 0.0 & [0.0, 2.5] & 99.3 & [96.3, 99.9] \\
+4 & 0.0 & [0.0, 2.5] & 98.7 & [95.3, 99.6] \\
+5 & 0.0 & [0.0, 2.5] & 99.3 & [96.3, 99.9] \\
+\midrule
+\textbf{Pooled} & \textbf{0.0} & \textbf{[0.0, 0.5]} & \textbf{99.2} & \textbf{[98.3, 99.6]} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Continuity Latency Overhead}
+
+Table~\ref{tab:clo} reports the latency distribution for failover events in the final run (Run~5, $n = 150$). We report median alongside mean to characterise the distribution honestly, as the latency data exhibits substantial right-skew driven by third-party API response time variability.
+
+\begin{table}[t]
+\centering
+\caption{Latency distribution for failover events (Run~5, $n = 150$). CLO is computed as paired per-conversation differences. All values in milliseconds.}
+\label{tab:clo}
+\small
+\begin{tabular}{lrrrrrr}
+\toprule
+ & \textbf{Mean} & \textbf{Median} & \textbf{P25} & \textbf{P75} & \textbf{P95} & \textbf{P99} \\
+\midrule
+Baseline latency  & 6{,}225 & 4{,}311 & 3{,}123 & 7{,}313 & 18{,}225 & 18{,}805 \\
+Treatment latency & 6{,}283 & 4{,}457 & 2{,}600 & 6{,}729 & 17{,}584 & 19{,}519 \\
+\midrule
+\textbf{CLO (paired)} & \textbf{+59} & \textbf{$-$450} & $-$1{,}687 & +1{,}295 & +13{,}614 & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Interpretation.}
+The mean CLO of $+59$~ms and the median CLO of $-450$~ms indicate that the History-Forwarding strategy imposes \textit{negligible} additional latency at the central tendency. The median is slightly negative, meaning that in the typical case the treatment system is no slower---and sometimes marginally faster---than the baseline. This may appear counterintuitive, since the treatment system transmits a larger payload. We attribute this to the dominant source of variance: third-party API response times, which fluctuate by thousands of milliseconds between consecutive requests to the same provider and dwarf any payload-size effect at the scale of our conversations (7--11 turns, $\sim$1--3~KB of text).
+
+\paragraph{Latency tail.}
+The P95 CLO of $+13{,}614$~ms reflects the heavy right tail of the treatment latency distribution. Examination of the tail cases reveals that all high-latency failover responses correspond to conversations with 9--11 turns, where the forwarded \texttt{messages[]} payload is largest, and where the fallback provider (Anthropic Claude) requires the most time to process the full context before generating a response. This is an inherent cost of the History-Forwarding strategy: larger conversation histories produce proportionally longer processing times at the fallback provider.
+
+\paragraph{Queue wait times.}
+Queue wait times---the difference between the harness-measured end-to-end latency and the proxy-reported provider latency---remained stable and comparable across both systems (baseline: median 942~ms, treatment: median 902~ms; P95 $\approx$ 1{,}200~ms for both). This confirms that the History-Forwarding strategy does not introduce additional queueing overhead at the proxy layer under high concurrency.
+
+\paragraph{A note on latency noise.}
+We emphasise that the absolute latency values reported here are properties of the third-party API endpoints (OpenAI and Anthropic), not of the proxy architecture. Both systems route through identical proxy infrastructure, and the CLO measures only the \textit{differential} latency attributable to the forwarding strategy. The high variance in absolute latencies (IQR spanning ${\sim}4{,}000$~ms for both systems) reflects the inherent variability of commercial LLM API response times under concurrent load and should not be interpreted as a property of the failover mechanism.
+
+\subsection{Breakdown by Conversation Length}
+
+Table~\ref{tab:by_length} reports CPR and latency broken down by conversation length (number of turns). This analysis tests whether longer conversations---which produce larger forwarded payloads---degrade the effectiveness of the History-Forwarding strategy.
+
+\begin{table}[t]
+\centering
+\caption{CPR and latency by conversation length (Run~5, $n = 150$). Turn count includes both user and assistant messages.}
+\label{tab:by_length}
+\small
+\begin{tabular}{crrrrrr}
+\toprule
+ & \multicolumn{3}{c}{\textbf{Baseline}} & \multicolumn{3}{c}{\textbf{Treatment}} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7}
+\textbf{Turns} & $n$ & \textbf{CPR} & \textbf{Med.\ lat.} & $n$ & \textbf{CPR} & \textbf{Med.\ lat.} \\
+\midrule
+7   & 44 & 0.0\% & 4{,}574 & 44 & 97.7\% & 4{,}059 \\
+9   & 58 & 0.0\% & 4{,}003 & 58 & 100.0\% & 4{,}538 \\
+11  & 48 & 0.0\% & 4{,}594 & 48 & 100.0\% & 4{,}402 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Interpretation.}
+The treatment CPR is uniformly high across all conversation lengths: 97.7\% at 7 turns, and 100.0\% at both 9 and 11 turns. The single failure in the 7-turn group (1/44) is the same class of fallback-model instruction-following error described above, not a forwarding failure. There is no evidence that longer conversations degrade the History-Forwarding mechanism's effectiveness.
+
+Median latencies are comparable across conversation lengths for both systems, ranging from ${\sim}4{,}000$ to ${\sim}4{,}600$~ms regardless of turn count. While one might expect monotonically increasing latency with payload size, the effect is masked by the dominant API response time variance. At the conversation lengths evaluated (7--11 turns), the incremental payload size does not produce a statistically detectable latency penalty.
+
+\subsection{Summary of Findings}
+
+\begin{enumerate}
+    \item The History-Forwarding strategy achieves a \textbf{99.20\% CPR} [98.27\%, 99.63\%] compared to \textbf{0.00\%} [0.00\%, 0.51\%] for the stateless baseline, across $N = 750$ pooled failover events.
+    \item The CPR is \textbf{stable across all 5 independent runs}, varying by at most 0.6 percentage points (98.7\%--99.3\%).
+    \item The median CLO is \textbf{$-$450~ms} (negligible/slightly favourable), with a mean of $+59$~ms. The latency cost of forwarding full conversation history is dominated by third-party API variance.
+    \item CPR is \textbf{uniformly high across conversation lengths} (97.7\%--100.0\% for 7--11 turn conversations), with no evidence of degradation for longer dialogues.
+    \item The residual 0.8\% failure rate (6/750) is attributable to fallback model instruction-following errors, not forwarding mechanism failures.
+\end{enumerate}

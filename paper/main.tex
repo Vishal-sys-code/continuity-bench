@@ -1,0 +1,53 @@
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{tikz}
+\usetikzlibrary{shapes, arrows.meta, positioning}
+\usepackage{pifont} % for ding marks
+\usepackage{xcolor}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    citecolor=blue,
+}
+
+\newtheorem{definition}{Definition}
+
+\title{\textbf{A Voice Agent Does Not Crash, It Forgets: Measuring and Mitigating Continuity Loss in LLM Failover}}
+\author{
+  Author Name \\
+  \texttt{author@example.com}
+}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\input{abstract}
+\input{introduction}
+\input{related_work}
+\input{system_design}
+\input{evaluation_methodology}
+\input{results}
+\input{discussion}
+\input{limitations}
+\input{conclusion}
+
+\bibliographystyle{plain}
+\bibliography{refs}
+
+\input{appendix}
+
+\end{document}

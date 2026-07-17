@@ -1,0 +1,96 @@
+\appendix
+
+\section{LLM Judge System Prompt}
+\label{app:judge_prompt}
+
+The following system prompt was used to instruct the GPT-4o judge during all evaluation runs. The prompt explicitly constrains the model to a factual verification task, rejecting responses that apologize, hallucinate, or miss critical details.
+
+\begin{quote}
+\small
+\textit{You are an expert evaluation judge. Your task is to determine whether an AI assistant successfully answered a probe question by recalling a specific fact from earlier in the conversation.}
+
+\textit{Return preserved=true if the assistant's answer correctly incorporates the Expected Fact (even if paraphrased slightly or formatted differently). Return preserved=false if the assistant apologizes, says it doesn't know, hallucinates a different fact, or misses critical details.}
+\end{quote}
+
+\section{Extended Results: Per-Run CPR Stability}
+\label{app:extended_results}
+
+Table~\ref{tab:app_cpr_runs} presents the unaggregated Continuity Preservation Rate (CPR) for each of the five independent runs comprising the $N=750$ evaluation suite. Each run evaluates $n=150$ failover events per system. The treatment CPR demonstrates tight stability, varying by a maximum of 0.6 percentage points across all runs.
+
+\begin{table}[h]
+\centering
+\caption{Continuity Preservation Rate broken down by individual run. Confidence intervals are 95\% Wilson score intervals.}
+\label{tab:app_cpr_runs}
+\small
+\begin{tabular}{ccrccrc}
+\toprule
+ & \multicolumn{3}{c}{\textbf{Baseline (Stateless)}} & \multicolumn{3}{c}{\textbf{Treatment (History-Forwarding)}} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7}
+\textbf{Run} & \textbf{Preserved} & \textbf{CPR (\%)} & \textbf{95\% CI} & \textbf{Preserved} & \textbf{CPR (\%)} & \textbf{95\% CI} \\
+\midrule
+1 & 0 / 150 & 0.0\% & [0.0, 2.5] & 149 / 150 & 99.3\% & [96.3, 99.9] \\
+2 & 0 / 150 & 0.0\% & [0.0, 2.5] & 149 / 150 & 99.3\% & [96.3, 99.9] \\
+3 & 0 / 150 & 0.0\% & [0.0, 2.5] & 149 / 150 & 99.3\% & [96.3, 99.9] \\
+4 & 0 / 150 & 0.0\% & [0.0, 2.5] & 148 / 150 & 98.7\% & [95.3, 99.6] \\
+5 & 0 / 150 & 0.0\% & [0.0, 2.5] & 149 / 150 & 99.3\% & [96.3, 99.9] \\
+\midrule
+\textbf{Pooled} & \textbf{0 / 750} & \textbf{0.0\%} & \textbf{[0.0, 0.5]} & \textbf{744 / 750} & \textbf{99.2\%} & \textbf{[98.3, 99.6]} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Sample Failover Transcripts}
+\label{app:transcripts}
+
+The following transcripts are sampled directly from the manual audit of Run 5. They illustrate the History-Forwarding mechanism in action: the fallback provider (Anthropic) correctly answers a highly specific probe question using context originally established with the primary provider (OpenAI). 
+
+All conversations are synthetic and contain no personally identifiable information.
+
+\paragraph{Case 1: Invented Term (conv-093)}
+\begin{quote}
+\small
+\textbf{Turn 0 (User):} In the game, the currency is called Plexarine. \\
+\textit{[... intervening filler dialogue processed by OpenAI ...]} \\
+\textbf{Turn 10 (User, Probe):} What is the currency called in the game I described? \\
+\textcolor{red}{\ding{55}} \textit{[Primary Provider (OpenAI) fails at Turn 10]} \\
+\textcolor{green!60!black}{\ding{51}} \textit{[Proxy forwards full history to Fallback Provider (Anthropic)]} \\
+\textbf{Turn 10 (Fallback Asst):} The currency in the game you described is called \textbf{Plexarine}.
+\end{quote}
+
+\paragraph{Case 2: Specific Preference (conv-027)}
+\begin{quote}
+\small
+\textbf{Turn 0 (User):} I prefer Gitflow with squash merges for version control workflows. \\
+\textit{[... intervening filler dialogue processed by OpenAI ...]} \\
+\textbf{Turn 8 (User, Probe):} What version control workflow did I say I prefer? \\
+\textcolor{red}{\ding{55}} \textit{[Primary Provider (OpenAI) fails at Turn 8]} \\
+\textcolor{green!60!black}{\ding{51}} \textit{[Proxy forwards full history to Fallback Provider (Anthropic)]} \\
+\textbf{Turn 8 (Fallback Asst):} You said you prefer Gitflow with squash merges.
+\end{quote}
+
+\paragraph{Case 3: Numeric Value (conv-080)}
+\begin{quote}
+\small
+\textbf{Turn 0 (User):} The new protocol we're designing is codenamed Syndexium. \\
+\textit{[... intervening filler dialogue processed by OpenAI ...]} \\
+\textbf{Turn 6 (User, Probe):} What codename did I give the new protocol? \\
+\textcolor{red}{\ding{55}} \textit{[Primary Provider (OpenAI) fails at Turn 6]} \\
+\textcolor{green!60!black}{\ding{51}} \textit{[Proxy forwards full history to Fallback Provider (Anthropic)]} \\
+\textbf{Turn 6 (Fallback Asst):} You called it Syndexium.
+\end{quote}
+
+\section{Harness Configuration Details}
+\label{app:config}
+
+To facilitate full reproduction, the exact configuration parameters used for the $N=750$ evaluation run are provided below.
+
+\begin{itemize}
+    \item \textbf{Concurrency ($C$):} 100 simultaneous simulated sessions, managed via \texttt{asyncio.Semaphore}.
+    \item \textbf{Primary Provider:} OpenAI (\texttt{gpt-4o-mini}), \texttt{temperature=0.0}.
+    \item \textbf{Fallback Provider:} Anthropic (\texttt{claude-3-5-sonnet-20240620}), \texttt{temperature=0.0}.
+    \item \textbf{Retry Strategy:} Exponential backoff with jitter on HTTP 429, 502, 503, 504.
+    \item \textbf{Backoff Formula:} $t_{\text{wait}} = \min(30\text{s}, 2^a + \mathcal{U}(0, 1))$ where $a$ is the attempt index.
+    \item \textbf{Maximum Retries:} 5 attempts per failover request.
+    \item \textbf{Proxy Read Timeout:} 300.0 seconds (to accommodate the Anthropic SDK's native backoff behavior without dropping the client connection).
+    \item \textbf{Fault Injection Point:} ``Late'' mode (failure injected exclusively on the final probe turn).
+\end{itemize}
