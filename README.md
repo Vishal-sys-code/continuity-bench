@@ -1,4 +1,6 @@
-# Continuity Bench 🧪
+# Continuity Bench 
+
+> This is an organisation benchmark project for [Metriqual](https://metriqual.com/). Paper is coming soon.
 
 A framework for evaluating the resilience and latency overhead of AI gateways and application-level failover strategies when LLM providers experience outages or degradation.
 
