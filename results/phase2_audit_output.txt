@@ -1,0 +1,87 @@
+=== MANUAL AUDIT (10 random treatment failovers from RUN 5) ===
+
+--- Case 1: conv-093 ---
+Provider: anthropic (Failed over from: openai)
+Context setup: In the game, the currency is called Plexarine....
+PROBE (Last User Msg): What is the currency called in the game I described?
+RESPONSE:
+The currency in the game you described is called **Plexarine**.
+-------------------------
+
+--- Case 2: conv-027 ---
+Provider: anthropic (Failed over from: openai)
+Context setup: I prefer Gitflow with squash merges for version control workflows....
+PROBE (Last User Msg): What version control workflow did I say I prefer?
+RESPONSE:
+You said you prefer Gitflow with squash merges.
+-------------------------
+
+--- Case 3: conv-101 ---
+Provider: anthropic (Failed over from: openai)
+Context setup: My favourite workout is zone-2 cycling....
+PROBE (Last User Msg): What did I say is my favourite workout?
+RESPONSE:
+You said your favourite workout is zone-2 cycling.
+-------------------------
+
+--- Case 4: conv-080 ---
+Provider: anthropic (Failed over from: openai)
+Context setup: The new protocol we're designing is codenamed Syndexium....
+PROBE (Last User Msg): What codename did I give the new protocol?
+RESPONSE:
+You called it Syndexium.
+-------------------------
+
+--- Case 5: conv-018 ---
+Provider: anthropic (Failed over from: openai)
+Context setup: I only read books in the Gothic horror genre....
+PROBE (Last User Msg): What book genre did I say I only read?
+RESPONSE:
+You said you only read books in the **Gothic horror** genre.
+-------------------------
+
+--- Case 6: conv-057 ---
+Provider: anthropic (Failed over from: openai)
+Context setup: The warranty expires on January 21, 1966....
+PROBE (Last User Msg): When does the warranty expire, according to what I told you?
+RESPONSE:
+Based on what you told me, the warranty expires on January 21, 1966.
+-------------------------
+
+--- Case 7: conv-049 ---
+Provider: anthropic (Failed over from: openai)
+Context setup: For vacations, I always choose coastal destinations....
+PROBE (Last User Msg): What type of vacation destination did I say I always choose?
+RESPONSE:
+You said you always choose coastal destinations.
+-------------------------
+
+--- Case 8: conv-066 ---
+Provider: anthropic (Failed over from: openai)
+Context setup: The new protocol we're designing is codenamed Plexaros....
+PROBE (Last User Msg): What codename did I give the new protocol?
+RESPONSE:
+You named it **Plexaros**.
+-------------------------
+
+--- Case 9: conv-062 ---
+Provider: anthropic (Failed over from: openai)
+Context setup: The lease renewal date is 1972-04-02....
+PROBE (Last User Msg): What is the lease renewal date I mentioned?
+RESPONSE:
+You mentioned the lease renewal date as 1972-04-02.
+-------------------------
+
+--- Case 10: conv-124 ---
+Provider: anthropic (Failed over from: openai)
+Context setup: The made-up element in my chemistry puzzle is Trevianum....
+PROBE (Last User Msg): What made-up element did I mention in my chemistry puzzle?
+RESPONSE:
+You mentioned Trevianum.
+-------------------------
+
+=== FINAL AGGREGATE CPR ===
+Total Failovers Evaluated: 750
+Successful Preservations: 744
+Aggregate CPR: 99.20%
+95% CI (Wilson Score): [98.27%, 99.63%]
