@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metriqual | The Blazingly Fast AI Gateway</title>
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="ambient-glow"></div>
+    
+    <nav class="navbar">
+        <div class="logo">Metriqual.</div>
+        <div class="nav-links">
+            <a href="#">Documentation</a>
+            <a href="#">Benchmarks</a>
+            <a href="#">GitHub</a>
+        </div>
+    </nav>
+
+    <main>
+        <section class="hero">
+            <div class="badge">Built in Rust 🦀</div>
+            <h1 class="gradient-text">The semantic gateway<br>for the AI era.</h1>
+            <p class="subtitle">Cut your LLM bill in half and reduce latency to zero with our blazingly fast, Rust-based edge proxy. Intelligent failover, PII redaction, and semantic routing out of the box.</p>
+            <div class="cta-group">
+                <button class="primary-btn">Get Started</button>
+                <button class="secondary-btn">View on GitHub</button>
+            </div>
+        </section>
+
+        <section class="demo-section">
+            <h2 class="demo-title">Don't take our word for it.</h2>
+            <p class="demo-subtitle">Watch Metriqual dynamically route a complex query vs a direct API call.</p>
+            
+            <div class="benchmark-container">
+                <!-- Standard API Card -->
+                <div class="card" id="standard-card">
+                    <div class="card-header">
+                        <h3>Direct OpenAI API</h3>
+                        <span class="status-badge">gpt-4o</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="query-box">
+                            "Summarize this 10k word financial report..."
+                        </div>
+                        <div class="metrics">
+                            <div class="metric">
+                                <span class="label">Latency</span>
+                                <span class="value" id="standard-latency">0ms</span>
+                            </div>
+                            <div class="metric">
+                                <span class="label">Cost</span>
+                                <span class="value" id="standard-cost">$0.000</span>
+                            </div>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-bar" id="standard-progress"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Metriqual Card -->
+                <div class="card highlight-card" id="metriqual-card">
+                    <div class="card-header">
+                        <h3>Metriqual Gateway</h3>
+                        <span class="status-badge route-badge">semantic-route: claude-3-haiku</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="query-box">
+                            "Summarize this 10k word financial report..."
+                        </div>
+                        <div class="metrics">
+                            <div class="metric">
+                                <span class="label">Latency</span>
+                                <span class="value highlight-text" id="metriqual-latency">0ms</span>
+                            </div>
+                            <div class="metric">
+                                <span class="label">Cost</span>
+                                <span class="value highlight-text" id="metriqual-cost">$0.000</span>
+                            </div>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-bar highlight-bar" id="metriqual-progress"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="run-btn" id="run-benchmark">Run Live Benchmark 🚀</button>
+        </section>
+
+        <section class="features">
+            <div class="feature-card">
+                <div class="icon">⚡</div>
+                <h3>Zero Overhead</h3>
+                <p>Written in purely safe Rust. Handles 10k+ concurrent requests with sub-millisecond overhead.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🧠</div>
+                <h3>Semantic Routing</h3>
+                <p>Evaluates prompt complexity on the fly to route to the cheapest model capable of answering.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🛡️</div>
+                <h3>PII Firewall</h3>
+                <p>Regex and NLP-based redaction running locally before requests ever leave your VPC.</p>
+            </div>
+        </section>
+    </main>
+    
+    <script src="script.js"></script>
+</body>
+</html>
